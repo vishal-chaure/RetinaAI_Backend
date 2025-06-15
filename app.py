@@ -36,41 +36,15 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Hugging Face model URL - Replace with your actual URL
-HUGGINGFACE_MODEL_URL = "https://huggingface.co/vishalchaure/RetinaAIProject/resolve/main/fine_tuned_resnet50_model.h5"
-
-def download_model():
-    """Download model from Hugging Face if not already downloaded"""
-    model_path = Path("models/fine_tuned_resnet50_model.h5")
-    
-    # Create models directory if it doesn't exist
-    model_path.parent.mkdir(exist_ok=True)
-    
-    # Download model if it doesn't exist
-    if not model_path.exists():
-        logger.info("Downloading model from Hugging Face...")
-        try:
-            response = requests.get(HUGGINGFACE_MODEL_URL, stream=True)
-            response.raise_for_status()
-            
-            total_size = int(response.headers.get('content-length', 0))
-            block_size = 1024  # 1 Kibibyte
-            
-            with open(model_path, 'wb') as f:
-                for data in response.iter_content(block_size):
-                    f.write(data)
-            logger.info("Model downloaded successfully!")
-        except Exception as e:
-            logger.error(f"Error downloading model: {str(e)}")
-            raise
-    
-    return str(model_path)
+# Local model path
+MODEL_PATH = "models/fine_tuned_resnet50_model.h5"
 
 # Load model
 try:
-    model_path = download_model()
-    model = load_model(model_path)
-    logger.info("Model loaded successfully!")
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}. Please place your .h5 model in the models/ directory.")
+    model = load_model(MODEL_PATH)
+    logger.info("Model loaded successfully from local file!")
 except Exception as e:
     logger.error(f"Error loading model: {str(e)}")
     raise
