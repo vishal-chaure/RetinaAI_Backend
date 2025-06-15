@@ -36,17 +36,29 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Local model path
-MODEL_PATH = "models/fine_tuned_resnet50_model.h5"
+# Hugging Face model URL (update this with your actual link)
+MODEL_URL = "https://huggingface.co/your-username/your-model-repo/resolve/main/fine_tuned_resnet50_model.h5"
+MODEL_DIR = "models"
+MODEL_PATH = os.path.join(MODEL_DIR, "fine_tuned_resnet50_model.h5")
 
-# Load model
+# Ensure model directory exists
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+# Download model if not present
 try:
     if not os.path.exists(MODEL_PATH):
-        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}. Please place your .h5 model in the models/ directory.")
+        logger.info("Model not found locally. Downloading from Hugging Face...")
+        with requests.get(MODEL_URL, stream=True) as r:
+            r.raise_for_status()
+            with open(MODEL_PATH, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        logger.info("Model downloaded successfully!")
+
     model = load_model(MODEL_PATH)
-    logger.info("Model loaded successfully from local file!")
+    logger.info("Model loaded successfully from downloaded file!")
 except Exception as e:
-    logger.error(f"Error loading model: {str(e)}")
+    logger.error(f"Error downloading or loading model: {str(e)}")
     raise
 
 # Get last conv layer name
