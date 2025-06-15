@@ -5,6 +5,8 @@ from flask_cors import CORS
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import os
+import logging
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import load_model
 from tf_keras_vis.gradcam import Gradcam
@@ -13,9 +15,23 @@ import base64
 import io
 from PIL import Image
 import datetime
-import os
 import requests
 from pathlib import Path
+
+# Configure TensorFlow to use CPU and suppress warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow logging
+tf.get_logger().setLevel('ERROR')  # Suppress TensorFlow warnings
+
+# Configure TensorFlow for CPU optimization
+tf.config.threading.set_inter_op_parallelism_threads(2)
+tf.config.threading.set_intra_op_parallelism_threads(2)
+
+# Disable GPU
+tf.config.set_visible_devices([], 'GPU')
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -32,13 +48,21 @@ def download_model():
     
     # Download model if it doesn't exist
     if not model_path.exists():
-        print("Downloading model from Hugging Face...")
-        response = requests.get(HUGGINGFACE_MODEL_URL)
-        response.raise_for_status()  # Raise an error for bad status codes
-        
-        with open(model_path, 'wb') as f:
-            f.write(response.content)
-        print("Model downloaded successfully!")
+        logger.info("Downloading model from Hugging Face...")
+        try:
+            response = requests.get(HUGGINGFACE_MODEL_URL, stream=True)
+            response.raise_for_status()
+            
+            total_size = int(response.headers.get('content-length', 0))
+            block_size = 1024  # 1 Kibibyte
+            
+            with open(model_path, 'wb') as f:
+                for data in response.iter_content(block_size):
+                    f.write(data)
+            logger.info("Model downloaded successfully!")
+        except Exception as e:
+            logger.error(f"Error downloading model: {str(e)}")
+            raise
     
     return str(model_path)
 
@@ -46,9 +70,9 @@ def download_model():
 try:
     model_path = download_model()
     model = load_model(model_path)
-    print("Model loaded successfully!")
+    logger.info("Model loaded successfully!")
 except Exception as e:
-    print(f"Error loading model: {str(e)}")
+    logger.error(f"Error loading model: {str(e)}")
     raise
 
 # Get last conv layer name
