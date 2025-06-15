@@ -147,8 +147,27 @@ def process_image(image_data):
             'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
     except Exception as e:
-        print(f"Error processing image: {str(e)}")
+        logger.error(f"Error processing image: {str(e)}")
         raise
+
+@app.route('/')
+def home():
+    return jsonify({
+        'status': 'API is running',
+        'endpoints': {
+            'predict': '/predict (POST) - Upload retinal image for analysis',
+            'health': '/health (GET) - Check API health status'
+        },
+        'usage': 'Send a POST request to /predict with a JSON body containing base64 encoded image in the "image" field'
+    })
+
+@app.route('/health')
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'model_loaded': model is not None,
+        'timestamp': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -161,7 +180,7 @@ def predict():
         result = process_image(image_data)
         return jsonify(result)
     except Exception as e:
-        print(f"Error in predict endpoint: {str(e)}")
+        logger.error(f"Error in predict endpoint: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
