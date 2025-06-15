@@ -37,7 +37,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Hugging Face model URL (update this with your actual link)
-MODEL_URL = "https://huggingface.co/your-username/your-model-repo/resolve/main/fine_tuned_resnet50_model.h5"
+MODEL_URL = "https://huggingface.co/vishalchaure/RetinaAIProject/resolve/main/fine_tuned_resnet50_model.h5"
 MODEL_DIR = "models"
 MODEL_PATH = os.path.join(MODEL_DIR, "fine_tuned_resnet50_model.h5")
 
