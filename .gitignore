@@ -51,5 +51,8 @@ Thumbs.db
 .env.production.local
 
 # Model files
-models/
+!models/
 *.h5
+
+.ds_store
+.DS_Store
