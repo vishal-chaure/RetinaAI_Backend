@@ -161,13 +161,15 @@ def predict():
         data = request.json
         if not data or 'image' not in data:
             return jsonify({'error': 'No image data provided'}), 400
+        
+        # return jsonify({'image': 'working'})
             
         image_data = data['image']
         result = process_image(image_data)
         return jsonify(result)
     except Exception as e:
         logger.error(f"Error in predict endpoint: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error ': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
